@@ -61,7 +61,7 @@ the repo root:
 
 ```bash
 GDRIVE_SHARED_WITH_ME=1 \
-GDRIVE_FOLDER="平台产品周会" \
+GDRIVE_FOLDER="agent 工作区" \
 GDRIVE_LOCAL_DIR="$(pwd)" \
 ./scripts/sync_gdrive.sh
 ```
