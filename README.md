@@ -53,6 +53,25 @@ no interactive `rclone config` / browser login is needed inside the VM.
 > GDRIVE_SHARED_WITH_ME=1 ./scripts/sync_gdrive.sh
 > ```
 
+### Sync a folder's contents directly into the repo root
+
+To drop the `gdrive-context/<folder>/` wrapper and place the folder's files
+straight under `/workspace`, point the source at the folder and the target at
+the repo root:
+
+```bash
+GDRIVE_SHARED_WITH_ME=1 \
+GDRIVE_FOLDER="平台产品周会" \
+GDRIVE_LOCAL_DIR="$(pwd)" \
+./scripts/sync_gdrive.sh
+```
+
+`.gitignore` uses an ignore-all-then-allowlist rule, so any Drive content synced
+into the repo root is **automatically git-ignored** and will never be committed.
+Only the project's own files (`README.md`, `AGENTS.md`, `scripts/`, `.gitignore`)
+are tracked — if you add a new tracked file at the root, allowlist it in
+`.gitignore`.
+
 Extra arguments are passed through to `rclone copy`, e.g.:
 
 ```bash

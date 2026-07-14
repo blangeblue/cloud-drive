@@ -1,6 +1,14 @@
-# Files synced from Google Drive (agent task context) — never commit user data.
-/gdrive-context/
+# Google Drive content is synced directly into the repo root (/workspace) and
+# must NEVER be committed. Ignore everything at the root by default, then
+# explicitly allow the project's own tracked files below.
+/*
 
-# Local rclone / credential material
+# Project files that ARE part of the repo (add new tracked root files here):
+!/.gitignore
+!/README.md
+!/AGENTS.md
+!/scripts/
+
+# (defense in depth) never commit credential material
 *.sa.json
 service-account*.json

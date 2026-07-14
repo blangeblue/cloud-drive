@@ -30,5 +30,11 @@ The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.
   syncs the shared `平台产品周会` folder into `gdrive-context/`).
 - The sync is a network fetch and is intentionally kept **out of the update
   script** — run it on demand.
-- Synced files land in `gdrive-context/` which is git-ignored; never commit
-  user Drive data or credential JSON.
+- Synced files are git-ignored; never commit user Drive data or credential JSON.
+  `.gitignore` ignores everything at the repo root (`/*`) and allowlists only the
+  project's own files, because Drive content is synced directly into `/workspace`.
+  When adding a new *tracked* file at the repo root, allowlist it in `.gitignore`
+  (e.g. `!/newfile`).
+- To flatten a folder's contents directly into `/workspace` (no
+  `gdrive-context/<folder>/` wrapper), run with `GDRIVE_FOLDER=<folder>` and
+  `GDRIVE_LOCAL_DIR="$(pwd)"` (plus `GDRIVE_SHARED_WITH_ME=1` for shared folders).
