@@ -44,6 +44,7 @@ no interactive `rclone config` / browser login is needed inside the VM.
 | `GDRIVE_LOCAL_DIR`      | `./gdrive-context` | Local target directory.                                       |
 | `GDRIVE_SCOPE`          | `drive.readonly`   | rclone drive scope (use `drive` for R/W).                     |
 | `GDRIVE_SHARED_WITH_ME` | *(unset)*          | Set to `1` to sync from "Shared with me" (see note below).    |
+| `GDRIVE_SYNC_MODE`      | `mirror`           | `mirror` deletes local files gone from Drive; `copy` is add-only. |
 
 > **Service account + shared folder:** when you *share* a Drive folder with a
 > service account, it lands in the account's **"Shared with me"**, not its own
@@ -72,8 +73,11 @@ Only the project's own files (`README.md`, `AGENTS.md`, `scripts/`, `.gitignore`
 are tracked — if you add a new tracked file at the root, allowlist it in
 `.gitignore`.
 
-Extra arguments are passed through to `rclone copy`, e.g.:
+Extra arguments are passed through to `rclone copy` / `rclone sync`, e.g.:
 
 ```bash
 ./scripts/sync_gdrive.sh --dry-run
 ```
+
+By default the sync **mirrors** Drive (removes local leftovers). Use
+`GDRIVE_SYNC_MODE=copy` for add-only behavior.

@@ -41,11 +41,12 @@ a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
   documented by Cursor; verify creds reach the hook if pull/push seem skipped.
 
 ### Sync mode: mirror vs copy (deleting stale files)
-- Startup pull and the pull hook default to **`GDRIVE_SYNC_MODE=mirror`** so that
-  files deleted on Drive are also removed locally. This fixes the gotcha where the
-  workspace is persisted across runs (warm-fork/snapshot): with the old `copy`
-  mode, files deleted on Drive lingered locally forever and appeared to "come
-  back" on each init.
+- `scripts/sync_gdrive.sh` itself defaults to **`GDRIVE_SYNC_MODE=mirror`** (as do
+  startup pull via `environment.json` and the pull hook). That way even an
+  outdated Team-dashboard install that forgets to pass the variable still
+  purges files deleted on Drive. This fixes the gotcha where the workspace is
+  persisted across runs (warm-fork/snapshot): with `copy` mode, Drive deletions
+  lingered locally forever and could be mistakenly pushed back up.
 - Mirror uses `rclone sync`, which deletes destination files missing from the
   source. Because Drive content lands in the repo root (`/workspace`),
   `sync_gdrive.sh` **protects repo files** from deletion via excludes: a static
@@ -55,6 +56,9 @@ a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
 - Set `GDRIVE_SYNC_MODE=copy` to fall back to add-only behavior. Untracked,
   non-Drive files placed at the repo root are NOT protected in mirror mode and
   will be deleted — keep such files out of the sync target or commit them.
+- Note: if the Cursor Team dashboard still has an older saved `install` script,
+  rebuild/refresh the environment so it picks up the committed
+  `.cursor/environment.json` (or rely on the script-level mirror default above).
 
 ### Running the sync
 - `rclone` is required; the update script installs it if missing.

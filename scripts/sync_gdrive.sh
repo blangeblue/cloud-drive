@@ -33,12 +33,12 @@
 #                      of "My Drive". Required when a folder was *shared* with a
 #                      service account (shared items do not appear under the
 #                      account's own Drive root).
-#   GDRIVE_SYNC_MODE   "copy" (default, add-only) or "mirror". Mirror uses
-#                      `rclone sync` so files deleted on Drive are also removed
-#                      locally. Repo/tooling files are protected from deletion
-#                      (static list + everything tracked by git).
+#   GDRIVE_SYNC_MODE   "mirror" (default) or "copy". Mirror uses `rclone sync`
+#                      so files deleted on Drive are also removed locally.
+#                      Repo/tooling files are protected from deletion (static
+#                      list + everything tracked by git). "copy" is add-only.
 #
-# Any extra arguments are passed straight through to `rclone copy`.
+# Any extra arguments are passed straight through to `rclone copy` / `rclone sync`.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -88,12 +88,13 @@ case "${GDRIVE_SHARED_WITH_ME:-}" in
   1|true|TRUE|yes|YES) EXTRA_FLAGS+=(--drive-shared-with-me) ;;
 esac
 
-# Mode: "copy" (default, add-only) or "mirror" (rclone sync, propagates Drive
-# deletions to the local copy). Mirror is required if you want files deleted on
-# Drive to also disappear locally instead of lingering forever.
-MODE="copy"
-case "${GDRIVE_SYNC_MODE:-copy}" in
-  mirror|sync|MIRROR|SYNC) MODE="sync" ;;
+# Mode: "mirror" (default, rclone sync — propagates Drive deletions) or "copy"
+# (add-only). Defaulting to mirror here is intentional: callers that forget to
+# set GDRIVE_SYNC_MODE (e.g. an outdated Team dashboard install script) must
+# still purge warm-fork / snapshot leftovers instead of leaving orphans forever.
+case "${GDRIVE_SYNC_MODE:-mirror}" in
+  copy|COPY) MODE="copy" ;;
+  *) MODE="sync" ;;
 esac
 
 # In mirror mode `rclone sync` deletes destination files that are absent from the
