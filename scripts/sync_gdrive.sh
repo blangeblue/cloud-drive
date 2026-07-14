@@ -33,6 +33,10 @@
 #                      of "My Drive". Required when a folder was *shared* with a
 #                      service account (shared items do not appear under the
 #                      account's own Drive root).
+#   GDRIVE_SYNC_MODE   "copy" (default, add-only) or "mirror". Mirror uses
+#                      `rclone sync` so files deleted on Drive are also removed
+#                      locally. Repo/tooling files are protected from deletion
+#                      (static list + everything tracked by git).
 #
 # Any extra arguments are passed straight through to `rclone copy`.
 # ---------------------------------------------------------------------------
@@ -84,10 +88,35 @@ case "${GDRIVE_SHARED_WITH_ME:-}" in
   1|true|TRUE|yes|YES) EXTRA_FLAGS+=(--drive-shared-with-me) ;;
 esac
 
+# Mode: "copy" (default, add-only) or "mirror" (rclone sync, propagates Drive
+# deletions to the local copy). Mirror is required if you want files deleted on
+# Drive to also disappear locally instead of lingering forever.
+MODE="copy"
+case "${GDRIVE_SYNC_MODE:-copy}" in
+  mirror|sync|MIRROR|SYNC) MODE="sync" ;;
+esac
+
+# In mirror mode `rclone sync` deletes destination files that are absent from the
+# source. When the destination is (or is inside) this git working tree, that
+# could wipe committed repo files. Protect them with excludes: a static list of
+# known entries PLUS every tracked top-level entry from `git ls-files`.
+PROTECT=()
+if [ "${MODE}" = "sync" ]; then
+  for e in .git .cursor scripts README.md AGENTS.md .gitignore; do
+    PROTECT+=(--exclude "/${e}" --exclude "/${e}/**")
+  done
+  if git -C "${LOCAL_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    while IFS= read -r entry; do
+      [ -n "${entry}" ] || continue
+      PROTECT+=(--exclude "/${entry}" --exclude "/${entry}/**")
+    done < <(git -C "${LOCAL_DIR}" ls-files | sed 's#/.*##' | sort -u)
+  fi
+fi
+
 mkdir -p "${LOCAL_DIR}"
 
-echo "Syncing '${SRC}' -> '${LOCAL_DIR}' (scope=${SCOPE})"
-rclone copy "${SRC}" "${LOCAL_DIR}" --fast-list --drive-acknowledge-abuse "${EXTRA_FLAGS[@]}" "$@"
+echo "Syncing '${SRC}' -> '${LOCAL_DIR}' (scope=${SCOPE}, mode=${MODE})"
+rclone "${MODE}" "${SRC}" "${LOCAL_DIR}" --fast-list --drive-acknowledge-abuse "${EXTRA_FLAGS[@]}" "${PROTECT[@]}" "$@"
 
 echo "Done. Files available under: ${LOCAL_DIR}"
 echo "--- top-level contents ---"

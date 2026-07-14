@@ -28,6 +28,7 @@ SCRIPT="${ROOT}/scripts/sync_gdrive.sh"
     if GDRIVE_SHARED_WITH_ME="${GDRIVE_SHARED_WITH_ME:-1}" \
        GDRIVE_FOLDER="${GDRIVE_FOLDER:-agent 工作区}" \
        GDRIVE_LOCAL_DIR="${GDRIVE_LOCAL_DIR:-${ROOT}}" \
+       GDRIVE_SYNC_MODE="${GDRIVE_SYNC_MODE:-mirror}" \
        bash "${SCRIPT}" >>"${GDRIVE_HOOK_LOG}" 2>&1; then
       gdrive_log "pull: ok"
     else

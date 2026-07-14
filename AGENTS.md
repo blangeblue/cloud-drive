@@ -40,6 +40,22 @@ a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
 - Cloud caveat: whether VM secrets are injected into hook subprocess envs is not
   documented by Cursor; verify creds reach the hook if pull/push seem skipped.
 
+### Sync mode: mirror vs copy (deleting stale files)
+- Startup pull and the pull hook default to **`GDRIVE_SYNC_MODE=mirror`** so that
+  files deleted on Drive are also removed locally. This fixes the gotcha where the
+  workspace is persisted across runs (warm-fork/snapshot): with the old `copy`
+  mode, files deleted on Drive lingered locally forever and appeared to "come
+  back" on each init.
+- Mirror uses `rclone sync`, which deletes destination files missing from the
+  source. Because Drive content lands in the repo root (`/workspace`),
+  `sync_gdrive.sh` **protects repo files** from deletion via excludes: a static
+  list (`.git`, `.cursor`, `scripts`, `README.md`, `AGENTS.md`, `.gitignore`)
+  **plus every tracked top-level entry from `git ls-files`**. Verified: repo files
+  survive; only Drive-derived files are added/removed.
+- Set `GDRIVE_SYNC_MODE=copy` to fall back to add-only behavior. Untracked,
+  non-Drive files placed at the repo root are NOT protected in mirror mode and
+  will be deleted — keep such files out of the sync target or commit them.
+
 ### Running the sync
 - `rclone` is required; the update script installs it if missing.
 - Configure the remote via env vars only (no interactive `rclone config` needed).
