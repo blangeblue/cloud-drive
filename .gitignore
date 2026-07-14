@@ -5,6 +5,7 @@
 
 # Project files that ARE part of the repo (add new tracked root files here):
 !/.gitignore
+!/.cursor/
 !/README.md
 !/AGENTS.md
 !/scripts/
