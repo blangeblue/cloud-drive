@@ -1,0 +1,14 @@
+# Google Drive content is synced directly into the repo root (/workspace) and
+# must NEVER be committed. Ignore everything at the root by default, then
+# explicitly allow the project's own tracked files below.
+/*
+
+# Project files that ARE part of the repo (add new tracked root files here):
+!/.gitignore
+!/README.md
+!/AGENTS.md
+!/scripts/
+
+# (defense in depth) never commit credential material
+*.sa.json
+service-account*.json
