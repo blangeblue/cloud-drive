@@ -1,3 +1,3 @@
 {
-  "install": "command -v rclone >/dev/null 2>&1 || curl -fsSL https://rclone.org/install.sh | sudo bash\nif [ -f scripts/sync_gdrive.sh ]; then GDRIVE_SHARED_WITH_ME=\"${GDRIVE_SHARED_WITH_ME:-1}\" GDRIVE_FOLDER=\"${GDRIVE_FOLDER:-agent 工作区}\" GDRIVE_LOCAL_DIR=\"${GDRIVE_LOCAL_DIR:-/workspace}\" bash scripts/sync_gdrive.sh; fi"
+  "install": "command -v rclone >/dev/null 2>&1 || curl -fsSL https://rclone.org/install.sh | sudo bash\nif [ -f scripts/sync_gdrive.sh ]; then GDRIVE_SHARED_WITH_ME=\"${GDRIVE_SHARED_WITH_ME:-1}\" GDRIVE_FOLDER=\"${GDRIVE_FOLDER:-agent 工作区}\" GDRIVE_LOCAL_DIR=\"${GDRIVE_LOCAL_DIR:-/workspace}\" GDRIVE_SYNC_MODE=\"${GDRIVE_SYNC_MODE:-mirror}\" bash scripts/sync_gdrive.sh; fi"
 }
