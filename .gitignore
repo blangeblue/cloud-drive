@@ -1,0 +1,6 @@
+# Files synced from Google Drive (agent task context) — never commit user data.
+/gdrive-context/
+
+# Local rclone / credential material
+*.sa.json
+service-account*.json
