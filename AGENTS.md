@@ -28,8 +28,16 @@ The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.
   NOT its Drive root — so a plain `./scripts/sync_gdrive.sh` returns 0 files.
   Run `GDRIVE_SHARED_WITH_ME=1 ./scripts/sync_gdrive.sh` in that case (verified:
   syncs the shared `平台产品周会` folder into `gdrive-context/`).
-- The sync is a network fetch and is intentionally kept **out of the update
-  script** — run it on demand.
+- **Auto-sync on startup:** the update script runs the sync automatically after
+  each VM start, but only when it is safe: it requires `scripts/sync_gdrive.sh`
+  to exist AND a credential env var (`GDRIVE_SERVICE_ACCOUNT_JSON` or
+  `RCLONE_GDRIVE_TOKEN`) to be set, and it is non-fatal (`|| true`) so it can
+  never break pod startup. Defaults used on startup: `GDRIVE_SHARED_WITH_ME=1`,
+  `GDRIVE_FOLDER=平台产品周会`, `GDRIVE_LOCAL_DIR=/workspace` (each overridable
+  via a same-named secret/env var). For auto-sync to work, the credential must
+  be stored as a **secret** (uploads do not persist) and this PR must be merged
+  so the script exists on the base branch.
+- You can also run the sync manually on demand: `./scripts/sync_gdrive.sh`.
 - Synced files are git-ignored; never commit user Drive data or credential JSON.
   `.gitignore` ignores everything at the repo root (`/*`) and allowlists only the
   project's own files, because Drive content is synced directly into `/workspace`.
