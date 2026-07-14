@@ -7,6 +7,13 @@
 `./gdrive-context/`, git-ignored) so they can serve as context for agent tasks.
 The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.org).
 
+### Environment config (source of truth)
+`.cursor/environment.json` is committed and its `install` field IS the startup
+update script (install rclone + gated Drive sync). Because a committed
+`environment.json` takes precedence over any dashboard-saved environment, edit
+the sync/startup behavior there. The credential is NOT in this file — it must be
+a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
+
 ### Running the sync
 - `rclone` is required; the update script installs it if missing.
 - Configure the remote via env vars only (no interactive `rclone config` needed).
@@ -28,15 +35,20 @@ The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.
   NOT its Drive root — so a plain `./scripts/sync_gdrive.sh` returns 0 files.
   Run `GDRIVE_SHARED_WITH_ME=1 ./scripts/sync_gdrive.sh` in that case (verified:
   syncs the shared `平台产品周会` folder into `gdrive-context/`).
-- **Auto-sync on startup:** the update script runs the sync automatically after
-  each VM start, but only when it is safe: it requires `scripts/sync_gdrive.sh`
-  to exist AND a credential env var (`GDRIVE_SERVICE_ACCOUNT_JSON` or
-  `RCLONE_GDRIVE_TOKEN`) to be set, and it is non-fatal (`|| true`) so it can
-  never break pod startup. Defaults used on startup: `GDRIVE_SHARED_WITH_ME=1`,
-  `GDRIVE_FOLDER=平台产品周会`, `GDRIVE_LOCAL_DIR=/workspace` (each overridable
-  via a same-named secret/env var). For auto-sync to work, the credential must
-  be stored as a **secret** (uploads do not persist) and this PR must be merged
-  so the script exists on the base branch.
+- **Auto-sync on startup is a hard gate.** The update script runs the sync on
+  every VM start, and a failed sync makes the whole environment-setup step fail
+  (there is intentionally no `|| true`). So "environment ready" implies "Drive
+  content synced". Consequences: if Drive is unreachable, the credential is
+  missing/expired, or the folder is no longer shared, the environment will fail
+  to come up. To make it non-blocking again, append `|| true` to the sync line
+  in the update script.
+- Startup defaults (each overridable via a same-named secret/env var):
+  `GDRIVE_SHARED_WITH_ME=1`, `GDRIVE_FOLDER=平台产品周会`,
+  `GDRIVE_LOCAL_DIR=/workspace`.
+- The only startup guard kept is `[ -f scripts/sync_gdrive.sh ]`, so that before
+  this PR is merged (script absent on the base branch) startup is not blocked.
+  After merge the gate is fully active; the credential must also be stored as a
+  **secret** (uploads do not persist) or the gate will fail on missing creds.
 - You can also run the sync manually on demand: `./scripts/sync_gdrive.sh`.
 - Synced files are git-ignored; never commit user Drive data or credential JSON.
   `.gitignore` ignores everything at the repo root (`/*`) and allowlists only the
