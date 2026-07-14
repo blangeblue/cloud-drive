@@ -20,21 +20,40 @@ gdrive_have_creds() {
 }
 
 # Export RCLONE_CONFIG_GDRIVE_* env for an ad-hoc "gdrive" remote.
-# Arg 1 = scope (e.g. drive.readonly or drive). Echoes a temp SA file path (if any)
-# on fd so the caller can clean it up via GDRIVE_TMP_SA.
+# Arg 1 = scope (e.g. drive.readonly or drive).
+# Arg 2 = preferred auth: "auto" (default, service account first) or "token".
+# Sets GDRIVE_ACTIVE_AUTH to "token" or "sa"; sets GDRIVE_TMP_SA to a temp file
+# the caller must remove via gdrive_cleanup_remote.
+#
+# Why "token" matters for writes: a service account cannot upload to a personal
+# ("My Drive") folder (403 storageQuotaExceeded), so push prefers the OAuth token.
 gdrive_configure_remote() {
   local scope="${1:-drive.readonly}"
+  local prefer="${2:-auto}"
   export RCLONE_CONFIG_GDRIVE_TYPE="drive"
   export RCLONE_CONFIG_GDRIVE_SCOPE="${scope}"
   GDRIVE_TMP_SA=""
-  if [ -n "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
-    GDRIVE_TMP_SA="$(mktemp)"
-    printf '%s' "${GDRIVE_SERVICE_ACCOUNT_JSON}" > "${GDRIVE_TMP_SA}"
-    export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="${GDRIVE_TMP_SA}"
-  elif [ -n "${RCLONE_GDRIVE_TOKEN:-}" ]; then
+  GDRIVE_ACTIVE_AUTH=""
+
+  local use_token=0
+  if [ -n "${RCLONE_GDRIVE_TOKEN:-}" ]; then
+    if [ "${prefer}" = "token" ] || [ -z "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
+      use_token=1
+    fi
+  fi
+
+  if [ "${use_token}" = "1" ]; then
     export RCLONE_CONFIG_GDRIVE_TOKEN="${RCLONE_GDRIVE_TOKEN}"
     [ -n "${GDRIVE_CLIENT_ID:-}" ]     && export RCLONE_CONFIG_GDRIVE_CLIENT_ID="${GDRIVE_CLIENT_ID}"
     [ -n "${GDRIVE_CLIENT_SECRET:-}" ] && export RCLONE_CONFIG_GDRIVE_CLIENT_SECRET="${GDRIVE_CLIENT_SECRET}"
+    unset RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE
+    GDRIVE_ACTIVE_AUTH="token"
+  elif [ -n "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
+    GDRIVE_TMP_SA="$(mktemp)"
+    printf '%s' "${GDRIVE_SERVICE_ACCOUNT_JSON}" > "${GDRIVE_TMP_SA}"
+    export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="${GDRIVE_TMP_SA}"
+    unset RCLONE_CONFIG_GDRIVE_TOKEN
+    GDRIVE_ACTIVE_AUTH="sa"
   fi
 }
 

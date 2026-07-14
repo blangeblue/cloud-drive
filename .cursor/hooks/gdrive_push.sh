@@ -22,7 +22,6 @@ DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT="$(gdrive_root)"
 LOCAL_DIR="${GDRIVE_LOCAL_DIR:-${ROOT}}"
 FOLDER="${GDRIVE_FOLDER:-agent 工作区}"
-SHARED_FLAG="$(gdrive_shared_flag)"
 
 {
   gdrive_log "push: start dir='${LOCAL_DIR}' folder='${FOLDER}'"
@@ -31,7 +30,20 @@ SHARED_FLAG="$(gdrive_shared_flag)"
   elif ! gdrive_have_creds; then
     gdrive_log "push: skipped (no credentials)"
   else
-    gdrive_configure_remote "${GDRIVE_PUSH_SCOPE:-drive}"
+    # Prefer the OAuth token: a service account cannot upload to personal Drive.
+    gdrive_configure_remote "${GDRIVE_PUSH_SCOPE:-drive}" token
+    gdrive_log "push: auth=${GDRIVE_ACTIVE_AUTH:-none}"
+    # Shared-with-me depends on the auth identity: for the token (folder owner)
+    # the folder is in "My Drive" (no flag); for a service account it is shared.
+    if [ "${GDRIVE_ACTIVE_AUTH}" = "token" ]; then
+      _swm_default=0
+    else
+      _swm_default="${GDRIVE_SHARED_WITH_ME:-1}"
+    fi
+    case "${GDRIVE_PUSH_SHARED_WITH_ME:-${_swm_default}}" in
+      1|true|TRUE|yes|YES) SHARED_FLAG="--drive-shared-with-me" ;;
+      *) SHARED_FLAG="" ;;
+    esac
     # Exclude repo/tooling files so only Drive-derived content is pushed back.
     if rclone copy "${LOCAL_DIR}" "gdrive:${FOLDER}" ${SHARED_FLAG} \
          --exclude "/.git/**" \
