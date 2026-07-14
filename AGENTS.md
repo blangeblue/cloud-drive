@@ -7,6 +7,13 @@
 `./gdrive-context/`, git-ignored) so they can serve as context for agent tasks.
 The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.org).
 
+### Environment config (source of truth)
+`.cursor/environment.json` is committed and its `install` field IS the startup
+update script (install rclone + gated Drive sync). Because a committed
+`environment.json` takes precedence over any dashboard-saved environment, edit
+the sync/startup behavior there. The credential is NOT in this file — it must be
+a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
+
 ### Running the sync
 - `rclone` is required; the update script installs it if missing.
 - Configure the remote via env vars only (no interactive `rclone config` needed).
