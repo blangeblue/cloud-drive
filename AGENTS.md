@@ -43,7 +43,7 @@ a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
   to come up. To make it non-blocking again, append `|| true` to the sync line
   in the update script.
 - Startup defaults (each overridable via a same-named secret/env var):
-  `GDRIVE_SHARED_WITH_ME=1`, `GDRIVE_FOLDER=平台产品周会`,
+  `GDRIVE_SHARED_WITH_ME=1`, `GDRIVE_FOLDER=agent 工作区`,
   `GDRIVE_LOCAL_DIR=/workspace`.
 - The only startup guard kept is `[ -f scripts/sync_gdrive.sh ]`, so that before
   this PR is merged (script absent on the base branch) startup is not blocked.
