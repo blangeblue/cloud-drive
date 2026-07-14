@@ -38,11 +38,20 @@ no interactive `rclone config` / browser login is needed inside the VM.
 
 ## Configuration (optional)
 
-| Variable           | Default                 | Description                                   |
-| ------------------ | ----------------------- | --------------------------------------------- |
-| `GDRIVE_FOLDER`    | *(root)*                | Drive folder path or folder ID to sync.       |
-| `GDRIVE_LOCAL_DIR` | `./gdrive-context`      | Local target directory.                       |
-| `GDRIVE_SCOPE`     | `drive.readonly`        | rclone drive scope (use `drive` for R/W).     |
+| Variable                | Default            | Description                                                    |
+| ----------------------- | ------------------ | ------------------------------------------------------------- |
+| `GDRIVE_FOLDER`         | *(root)*           | Drive folder path or folder ID to sync.                       |
+| `GDRIVE_LOCAL_DIR`      | `./gdrive-context` | Local target directory.                                       |
+| `GDRIVE_SCOPE`          | `drive.readonly`   | rclone drive scope (use `drive` for R/W).                     |
+| `GDRIVE_SHARED_WITH_ME` | *(unset)*          | Set to `1` to sync from "Shared with me" (see note below).    |
+
+> **Service account + shared folder:** when you *share* a Drive folder with a
+> service account, it lands in the account's **"Shared with me"**, not its own
+> Drive root. Run with `GDRIVE_SHARED_WITH_ME=1` so the sync can see it, e.g.:
+>
+> ```bash
+> GDRIVE_SHARED_WITH_ME=1 ./scripts/sync_gdrive.sh
+> ```
 
 Extra arguments are passed through to `rclone copy`, e.g.:
 

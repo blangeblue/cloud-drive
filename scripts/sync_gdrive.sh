@@ -29,6 +29,10 @@
 #                      Empty = sync from the Drive root.
 #   GDRIVE_LOCAL_DIR   Local target directory. Default: <repo>/gdrive-context
 #   GDRIVE_SCOPE       rclone drive scope. Default: drive.readonly
+#   GDRIVE_SHARED_WITH_ME  Set to 1/true to sync from "Shared with me" instead
+#                      of "My Drive". Required when a folder was *shared* with a
+#                      service account (shared items do not appear under the
+#                      account's own Drive root).
 #
 # Any extra arguments are passed straight through to `rclone copy`.
 # ---------------------------------------------------------------------------
@@ -75,11 +79,16 @@ if [ -n "${GDRIVE_FOLDER:-}" ]; then
   SRC="${REMOTE}:${GDRIVE_FOLDER}"
 fi
 
+EXTRA_FLAGS=()
+case "${GDRIVE_SHARED_WITH_ME:-}" in
+  1|true|TRUE|yes|YES) EXTRA_FLAGS+=(--drive-shared-with-me) ;;
+esac
+
 mkdir -p "${LOCAL_DIR}"
 
 echo "Syncing '${SRC}' -> '${LOCAL_DIR}' (scope=${SCOPE})"
-rclone copy "${SRC}" "${LOCAL_DIR}" --fast-list --drive-acknowledge-abuse "$@"
+rclone copy "${SRC}" "${LOCAL_DIR}" --fast-list --drive-acknowledge-abuse "${EXTRA_FLAGS[@]}" "$@"
 
 echo "Done. Files available under: ${LOCAL_DIR}"
 echo "--- top-level contents ---"
-rclone lsf "${SRC}" 2>/dev/null | head -50 || true
+rclone lsf "${SRC}" "${EXTRA_FLAGS[@]}" 2>/dev/null | head -50 || true

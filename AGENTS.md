@@ -24,6 +24,10 @@ The mechanism is `scripts/sync_gdrive.sh`, which drives [rclone](https://rclone.
 - A service account has **no access to a user's personal Drive** unless the
   files/folders are explicitly shared with it (or live on an accessible Shared
   Drive). Sharing a folder is the usual fix when a sync returns 0 files.
+- A folder *shared with* a service account appears under its **"Shared with me"**,
+  NOT its Drive root — so a plain `./scripts/sync_gdrive.sh` returns 0 files.
+  Run `GDRIVE_SHARED_WITH_ME=1 ./scripts/sync_gdrive.sh` in that case (verified:
+  syncs the shared `平台产品周会` folder into `gdrive-context/`).
 - The sync is a network fetch and is intentionally kept **out of the update
   script** — run it on demand.
 - Synced files land in `gdrive-context/` which is git-ignored; never commit
