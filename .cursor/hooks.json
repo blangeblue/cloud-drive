@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": ".cursor/hooks/gdrive_pull.sh", "timeout": 600 }
+    ],
+    "sessionEnd": [
+      { "command": ".cursor/hooks/gdrive_push.sh", "timeout": 600 }
+    ],
+    "stop": [
+      { "command": ".cursor/hooks/gdrive_push.sh", "timeout": 600 }
+    ]
+  }
+}

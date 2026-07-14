@@ -14,6 +14,24 @@ update script (install rclone + gated Drive sync). Because a committed
 the sync/startup behavior there. The credential is NOT in this file — it must be
 a secret (`GDRIVE_SERVICE_ACCOUNT_JSON`).
 
+### Cursor hooks (session-driven sync)
+`.cursor/hooks.json` wires Google Drive sync to agent lifecycle events:
+- `sessionStart` → `.cursor/hooks/gdrive_pull.sh` (pull). Fires for **local IDE**
+  agents only; **cloud agents do not fire `sessionStart`**, so cloud pull happens
+  at VM boot via `environment.json` instead.
+- `stop` (+ `sessionEnd` for local) → `.cursor/hooks/gdrive_push.sh` (push back).
+- Hooks are non-blocking and non-fatal: real output goes to `/tmp/gdrive_hook.log`,
+  and each hook prints only `{}` on stdout. Shared helpers live in
+  `.cursor/hooks/gdrive_common.sh`.
+- **Push is OFF by default** (`GDRIVE_PUSH_ENABLED=0`) and requires write access.
+  A plain **service account cannot upload to a personal ("My Drive") folder** —
+  Google returns `403 storageQuotaExceeded`. To enable push: use an **OAuth user
+  token** (`RCLONE_GDRIVE_TOKEN`) or a **Shared Drive** (add the SA as a member),
+  then set secret `GDRIVE_PUSH_ENABLED=1`. Push excludes repo/tooling files
+  (`.git`, `.cursor`, `scripts`, `README.md`, `AGENTS.md`, `.gitignore`).
+- Cloud caveat: whether VM secrets are injected into hook subprocess envs is not
+  documented by Cursor; verify creds reach the hook if pull/push seem skipped.
+
 ### Running the sync
 - `rclone` is required; the update script installs it if missing.
 - Configure the remote via env vars only (no interactive `rclone config` needed).
